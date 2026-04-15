@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Camp{% endblock %}
+
+{% block content %}
+<div class="bb-glass bb-card p-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill bb-glass">
+        <i class="bi bi-calendar2-plus" style="color: var(--bb-blue)"></i>
+        <span class="small fw-semibold">Create Camp</span>
+      </div>
+      <h3 class="fw-bold mt-3 mb-1">New Blood Donation Camp</h3>
+      <div class="text-muted">Add camp location, date and organizers</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-gradient" href="{% url 'camp_list' %}"><i class="bi bi-arrow-left me-2"></i>Back</a>
+    </div>
+  </div>
+
+  <form method="post" class="mt-3">
+    {% csrf_token %}
+
+    <div class="row g-3">
+      {% for field in form %}
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="d-grid mt-4">
+      <button class="btn btn-gradient btn-lg" type="submit"><i class="bi bi-check2-circle me-2"></i>Create Camp</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
