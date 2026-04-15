@@ -1,0 +1,725 @@
+{% load static %}
+{% load i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Blood Bank{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/logo.svg' %}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="page-{% if request.resolver_match and request.resolver_match.url_name %}{{ request.resolver_match.url_name }}{% else %}default{% endif %}">
+
+<div id="pageLoader" class="page-loader" aria-hidden="true">
+  <div class="loader-card">
+    <div class="blood-drop"></div>
+    <div class="loader-text">Preparing AI Dashboard...</div>
+  </div>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-light bb-nav shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="{% url 'landing' %}">
+      <img src="{% static 'img/logo.svg' %}" alt="AI Blood Bank" width="28" height="28" style="display:block">
+      <span>Blood Bank</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        {% if user.is_authenticated %}
+          <li class="nav-item me-2">
+            <select class="form-select form-select-sm features-selector" onchange="if(this.value) window.location.href=this.value" aria-label="Features">
+              <option value="" disabled selected data-i18n="features">Features</option>
+              <option value="{% url 'features' %}#cloud-based" data-i18n="cloud_based">Cloud Based</option>
+              <option value="{% url 'features' %}#automated-reports" data-i18n="automated_reports">Automated Reports</option>
+              <option value="{% url 'features' %}#compliance" data-i18n="compliance">Compliance Made Simple</option>
+              <option value="{% url 'features' %}#staff-tracking" data-i18n="staff_tracking">Staff Activity Tracking</option>
+            </select>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="#" data-i18n="blogs">Blogs</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'find_blood' %}" data-i18n="find_blood">Find Blood</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'find_donor' %}" data-i18n="find_donor">Find Donor</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'find_blood_bank' %}" data-i18n="blood_banks">Blood Banks</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'emergency_request' %}" data-i18n="emergency">Emergency</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'demand_prediction' %}" data-i18n="prediction">Prediction</a></li>
+
+          {% if user.is_superuser %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'inventory_status' %}" data-i18n="inventory">Inventory</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'camp_list' %}" data-i18n="camps">Camps</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}" data-i18n="dashboard">Dashboard</a></li>
+          {% endif %}
+
+          <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}" data-i18n="profile">Profile</a></li>
+
+          <!-- Language Selector -->
+          <li class="nav-item me-2">
+            <form action="{% url 'set_language' %}" method="post" class="d-flex">
+              {% csrf_token %}
+              <input name="next" type="hidden" value="{{ request.path }}" />
+              <select class="form-select form-select-sm lang-selector language-picker" name="language" onchange="this.form.submit()" aria-label="Select Language">
+                {% get_current_language as LANGUAGE_CODE %}
+                {% get_available_languages as LANGUAGES %}
+                {% for lang_code, lang_name in LANGUAGES %}
+                  <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_name }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </li>
+
+          <li class="nav-item">
+            <form method="post" action="{% url 'logout' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-dark btn-sm" data-i18n="logout">Logout</button>
+            </form>
+          </li>
+        {% else %}
+          <li class="nav-item me-2">
+            <select class="form-select form-select-sm features-selector" onchange="if(this.value) window.location.href=this.value" aria-label="Features">
+              <option value="" disabled selected data-i18n="features">Features</option>
+              <option value="{% url 'features' %}#cloud-based" data-i18n="cloud_based">Cloud Based</option>
+              <option value="{% url 'features' %}#automated-reports" data-i18n="automated_reports">Automated Reports</option>
+              <option value="{% url 'features' %}#compliance" data-i18n="compliance">Compliance Made Simple</option>
+              <option value="{% url 'features' %}#staff-tracking" data-i18n="staff_tracking">Staff Activity Tracking</option>
+            </select>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="#" data-i18n="blogs">Blogs</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'about' %}" data-i18n="about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'services' %}" data-i18n="services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'awareness' %}" data-i18n="awareness">Awareness</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'emergency_request' %}" data-i18n="emergency">Emergency</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'demand_prediction' %}" data-i18n="prediction">Demand Prediction</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}" data-i18n="contact">Contact</a></li>
+          
+          <!-- Language Selector -->
+          <li class="nav-item me-2">
+            <form action="{% url 'set_language' %}" method="post" class="d-flex">
+              {% csrf_token %}
+              <input name="next" type="hidden" value="{{ request.path }}" />
+              <select class="form-select form-select-sm lang-selector language-picker" name="language" onchange="this.form.submit()" aria-label="Select Language">
+                {% get_current_language as LANGUAGE_CODE %}
+                {% get_available_languages as LANGUAGES %}
+                {% for lang_code, lang_name in LANGUAGES %}
+                  <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_name }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </li>
+
+          <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="{% url 'login' %}" data-i18n="sign_in">Sign In</a></li>
+          <li class="nav-item"><a class="btn btn-light btn-sm" href="{% url 'register' %}" data-i18n="sign_up">Sign Up</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="page-wrap">
+  <div class="container py-4">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} shadow-sm" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="footer border-top">
+  <div class="container py-3 d-flex flex-column flex-md-row justify-content-between gap-2">
+    <div class="text-muted small">© {% now 'Y' %} Blood Bank Management System</div>
+    <div class="text-muted small">Built with Django + Bootstrap</div>
+  </div>
+</footer>
+
+<!-- Chatbot Container -->
+<div class="chatbot-container">
+  <button class="chatbot-button" type="button" onclick="toggleChatbot()" aria-label="Open chatbot">
+    <i class="bi bi-chat-dots-fill"></i>
+  </button>
+  <div class="chatbot-window" id="chatbotWindow">
+    <div class="chatbot-header">
+      <i class="bi bi-robot me-2"></i>AI Blood Bank Assistant
+      <button type="button" class="btn-close btn-close-white float-end" onclick="toggleChatbot()" aria-label="Close"></button>
+    </div>
+    
+    <div class="chatbot-messages" id="chatMessages">
+      <div class="chatbot-message bot-message">
+        👋 Hello! I'm your AI Blood Bank Assistant. How can I help you today?
+      </div>
+      <div class="quick-actions">
+        <button class="quick-action-btn" type="button" onclick="sendQuickMessage('Find blood bank')">🏥 Find blood bank</button>
+        <button class="quick-action-btn" type="button" onclick="sendQuickMessage('Check eligibility')">🩺 Check eligibility</button>
+        <button class="quick-action-btn" type="button" onclick="sendQuickMessage('Emergency request')">🚨 Emergency</button>
+        <button class="quick-action-btn" type="button" onclick="sendQuickMessage('Donate blood')">💉 Donate blood</button>
+      </div>
+    </div>
+    
+    <div class="chatbot-input">
+      <div class="input-group">
+        <input type="text" class="form-control" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+        <button class="btn btn-gradient" type="button" onclick="sendMessage()">
+          <i class="bi bi-send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+
+<script>
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+async function callChatbotApi(message) {
+  const csrfToken = getCookie('csrftoken');
+  const res = await fetch('/api/chatbot/', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const details = data.details ? ` (${data.details})` : '';
+    throw new Error((data.error || 'Request failed') + details);
+  }
+  return data.reply || '';
+}
+
+function toggleChatbot() {
+  const chatWindow = document.getElementById('chatbotWindow');
+  if (!chatWindow) return;
+  chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+  const message = input.value.trim();
+  if (message) {
+    addMessage(message, 'user');
+    input.value = '';
+
+    callChatbotApi(message)
+      .then((response) => addMessage(response, 'bot'))
+      .catch((e) => addMessage(`Sorry, chatbot error: ${e && e.message ? e.message : 'Unknown error'}`, 'bot'));
+  }
+}
+
+function sendQuickMessage(message) {
+  addMessage(message, 'user');
+  callChatbotApi(message)
+    .then((response) => addMessage(response, 'bot'))
+    .catch((e) => addMessage(`Sorry, chatbot error: ${e && e.message ? e.message : 'Unknown error'}`, 'bot'));
+}
+
+function addMessage(message, sender) {
+  const messagesContainer = document.getElementById('chatMessages');
+  if (!messagesContainer) return;
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chatbot-message ${sender}-message`;
+  if (sender === 'bot') {
+    messageDiv.innerHTML = message;
+  } else {
+    messageDiv.textContent = message;
+  }
+  messagesContainer.appendChild(messageDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function handleChatKeyPress(event) {
+  if (event.key === 'Enter') {
+    sendMessage();
+  }
+}
+
+// Language Switching Logic
+const translations = {
+  'en': {
+    'features': 'Features',
+    'cloud_based': 'Cloud Based',
+    'automated_reports': 'Automated Reports',
+    'compliance': 'Compliance Made Simple',
+    'staff_tracking': 'Staff Activity Tracking',
+    'blogs': 'Blogs',
+    'find_blood': 'Find Blood',
+    'find_donor': 'Find Donor',
+    'blood_banks': 'Blood Banks',
+    'emergency': 'Emergency',
+    'prediction': 'Prediction',
+    'inventory': 'Inventory',
+    'camps': 'Camps',
+    'dashboard': 'Dashboard',
+    'profile': 'Profile',
+    'logout': 'Logout',
+    'about': 'About',
+    'services': 'Services',
+    'awareness': 'Awareness',
+    'contact': 'Contact',
+    'sign_in': 'Sign In',
+    'sign_up': 'Sign Up',
+    'ai_ml_matching': 'AI • ML • Smart Matching',
+    'hero_title': 'AI Powered Blood Bank Management System',
+    'hero_subtitle': 'Smart blood donor matching using AI & Machine Learning',
+    'become_donor': 'Become a Donor',
+    'ai_prediction': 'AI Prediction',
+    'live_availability': 'Live Availability',
+    'realtime_update': 'Inventory updated in real-time',
+    'nearest_donors': 'Nearest Donors',
+    'distance_matching': 'Distance-based matching',
+    'health_risk_check': 'Health Risk Check',
+    'eligibility_insights': 'Eligibility insights'
+  },
+  'hi': {
+    'features': 'विशेषताएं',
+    'cloud_based': 'क्लाउड आधारित',
+    'automated_reports': 'स्वचालित रिपोर्ट',
+    'compliance': 'अनुपालन सरल बनाया',
+    'staff_tracking': 'कर्मचारी गतिविधि ट्रैकिंग',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रक्त खोजें',
+    'find_donor': 'दाता खोजें',
+    'blood_banks': 'ब्लड बैंक',
+    'emergency': 'आपातकालीन',
+    'prediction': 'पूर्वानुमान',
+    'inventory': 'इन्वेंटरी',
+    'camps': 'शिविर',
+    'dashboard': 'डैशबोर्ड',
+    'profile': 'प्रोफ़ाइल',
+    'logout': 'लॉगआउट',
+    'about': 'हमारे बारे में',
+    'services': 'सेवाएं',
+    'awareness': 'जागरूकता',
+    'contact': 'संपर्क',
+    'sign_in': 'साइन इन करें',
+    'sign_up': 'साइन अप करें',
+    'ai_ml_matching': 'AI • ML • स्मार्ट मिलान',
+    'hero_title': 'AI संचालित ब्लड बैंक प्रबंधन प्रणाली',
+    'hero_subtitle': 'AI और मशीन लर्निंग का उपयोग करके स्मार्ट रक्तदाता मिलान',
+    'become_donor': 'रक्तदाता बनें',
+    'ai_prediction': 'AI पूर्वानुमान',
+    'live_availability': 'लाइव उपलब्धता',
+    'realtime_update': 'वास्तविक समय में अपडेट',
+    'nearest_donors': 'निकटतम रक्तदाता',
+    'distance_matching': 'दूरी-आधारित मिलान',
+    'health_risk_check': 'स्वास्थ्य जोखिम जांच',
+    'eligibility_insights': 'पात्रता अंतर्दृष्टि'
+  },
+  'mr': {
+    'features': 'वैशिष्ट्ये',
+    'cloud_based': 'क्लाउड आधारित',
+    'automated_reports': 'स्वयंचलित अहवाल',
+    'compliance': 'अनुपालन सोपे केले',
+    'staff_tracking': 'कर्मचारी क्रियाकलाप मागोवा',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रक्त शोधा',
+    'find_donor': 'रक्तदाता शोधा',
+    'blood_banks': 'रक्तपेढी',
+    'emergency': 'आपत्कालीन',
+    'prediction': 'अंदाज',
+    'inventory': 'साठा',
+    'camps': 'शिबिर',
+    'dashboard': 'डॅशबोर्ड',
+    'profile': 'प्रोफाइल',
+    'logout': 'लॉगआउट',
+    'about': 'बद्दल',
+    'services': 'सेवा',
+    'awareness': 'जागरूकता',
+    'contact': 'संपर्क',
+    'sign_in': 'साइन इन करा',
+    'sign_up': 'साइन अप करा',
+    'ai_ml_matching': 'AI • ML • स्मार्ट जुळणी',
+    'hero_title': 'AI आधारित ब्लड बँक व्यवस्थापन प्रणाली',
+    'hero_subtitle': 'AI आणि मशीन लर्निंग वापरून स्मार्ट रक्तदाता जुळणी',
+    'become_donor': 'रक्तदाता व्हा',
+    'ai_prediction': 'AI अंदाज',
+    'live_availability': 'थेट उपलब्धता',
+    'realtime_update': 'रिअल-टाइम अपडेट',
+    'nearest_donors': 'जवळचे रक्तदाता',
+    'distance_matching': 'दूरी-आधारित जुळणी',
+    'health_risk_check': 'आरोग्य जोखीम तपासणी',
+    'eligibility_insights': 'पात्रता माहिती'
+  },
+  'vhr': {
+    'features': 'वैशिष्ट्ये (वऱ्हाडी)',
+    'cloud_based': 'क्लाउडवरलं',
+    'automated_reports': 'आपोआप अहवाल',
+    'compliance': 'नियम सोपे झाले',
+    'staff_tracking': 'नोकरांवर नजर',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रक्त शोधा',
+    'find_donor': 'दाता शोधा',
+    'blood_banks': 'रक्तपेढी',
+    'emergency': 'आपातकाल',
+    'prediction': 'अंदाज',
+    'inventory': 'साठा',
+    'camps': 'कॅम्प',
+    'dashboard': 'डॅशबोर्ड',
+    'profile': 'माहिती',
+    'logout': 'बाहेर पडा',
+    'about': 'आमच्याबद्दल',
+    'services': 'सेवा',
+    'awareness': 'जागृती',
+    'contact': 'भेटा',
+    'sign_in': 'आत या',
+    'sign_up': 'नाव नोंदवा',
+    'ai_ml_matching': 'AI जुळणी',
+    'hero_title': 'AI वाली ब्लड बँक सिस्टम',
+    'hero_subtitle': 'स्मार्ट रक्तदाता शोधण्याची सोय',
+    'become_donor': 'रक्तदान करा',
+    'ai_prediction': 'AI अंदाज',
+    'live_availability': 'आत्ताची सोय',
+    'realtime_update': 'आत्ताची माहिती',
+    'nearest_donors': 'जवळचे लोक',
+    'distance_matching': 'जवळून जुळणी',
+    'health_risk_check': 'आरोग्य तपासणी',
+    'eligibility_insights': 'पात्रता'
+  },
+  'ahr': {
+    'features': 'वैशिष्ट्ये (अहिराणी)',
+    'cloud_based': 'क्लाउड आधारित',
+    'automated_reports': 'रिपोर्ट आपोआप',
+    'compliance': 'नियम सोपा',
+    'staff_tracking': 'कामगिरी पहा',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रक्त शोधा',
+    'find_donor': 'दाता शोधा',
+    'blood_banks': 'रक्तपेढी',
+    'emergency': 'इमर्जन्सी',
+    'prediction': 'अंदाज',
+    'inventory': 'साठा',
+    'camps': 'शिबिर',
+    'dashboard': 'डॅशबोर्ड',
+    'profile': 'प्रोफाइल',
+    'logout': 'बाहेर जा',
+    'about': 'माहिती',
+    'services': 'सेवा',
+    'awareness': 'जागृती',
+    'contact': 'भेटा',
+    'sign_in': 'साइन इन',
+    'sign_up': 'नोंदणी',
+    'ai_ml_matching': 'AI जुळणी',
+    'hero_title': 'AI ब्लड बँक सिस्टिम',
+    'hero_subtitle': 'रक्तदाता शोधायले सोप',
+    'become_donor': 'दाता बना',
+    'ai_prediction': 'AI अंदाज',
+    'live_availability': 'उपलब्धता',
+    'realtime_update': 'माहिती अपडेट',
+    'nearest_donors': 'जवळचा दाता',
+    'distance_matching': 'जवळून शोध',
+    'health_risk_check': 'तपासणी',
+    'eligibility_insights': 'पात्रता'
+  },
+  'mlv': {
+    'features': 'वैशिष्ट्ये (मालवणी)',
+    'cloud_based': 'क्लाउडवरचा',
+    'automated_reports': 'रिपोर्ट आपोआप',
+    'compliance': 'नियम सोपे',
+    'staff_tracking': 'कामाचा मागोवा',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रक्त शोधा',
+    'find_donor': 'रक्तदाता शोधूया',
+    'blood_banks': 'रक्तपेढी',
+    'emergency': 'आपत्कालीन',
+    'prediction': 'अंदाज',
+    'inventory': 'साठा',
+    'camps': 'शिबिर',
+    'dashboard': 'डॅशबोर्ड',
+    'profile': 'प्रोफाइल',
+    'logout': 'बाहेर पडा',
+    'about': 'आमच्याबद्दल',
+    'services': 'सेवा',
+    'awareness': 'जागरूकता',
+    'contact': 'संपर्क',
+    'sign_in': 'आत या',
+    'sign_up': 'नोंदणी करा',
+    'ai_ml_matching': 'AI स्मार्ट जुळणी',
+    'hero_title': 'AI ब्लड बँक व्यवस्था',
+    'hero_subtitle': 'रक्तदाता शोधायचा सोपा मार्ग',
+    'become_donor': 'दाता बना',
+    'ai_prediction': 'AI अंदाज',
+    'live_availability': 'आत्ताची सोय',
+    'realtime_update': 'माहिती अपडेट',
+    'nearest_donors': 'जवळचे लोक',
+    'distance_matching': 'जवळची जुळणी',
+    'health_risk_check': 'आरोग्य तपासणी',
+    'eligibility_insights': 'पात्रता'
+  },
+  'zdb': {
+    'features': 'वैशिष्ट्ये (झाडी)',
+    'cloud_based': 'क्लाउड आधारित',
+    'automated_reports': 'अहवाल आपोआप',
+    'compliance': 'नियम सोपे',
+    'staff_tracking': 'नोकरांवर नजर',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रक्त शोधा',
+    'find_donor': 'दाता शोधा',
+    'blood_banks': 'रक्तपेढी',
+    'emergency': 'आपत्कालीन',
+    'prediction': 'अंदाज',
+    'inventory': 'साठा',
+    'camps': 'शिबिर',
+    'dashboard': 'डॅशबोर्ड',
+    'profile': 'प्रोफाइल',
+    'logout': 'बाहेर पडा',
+    'about': 'बद्दल',
+    'services': 'सेवा',
+    'awareness': 'जागृती',
+    'contact': 'संपर्क',
+    'sign_in': 'साइन इन',
+    'sign_up': 'साइन अप',
+    'ai_ml_matching': 'AI स्मार्ट जुळणी',
+    'hero_title': 'AI ब्लड बँक सिस्टिम',
+    'hero_subtitle': 'रक्तदाता शोधायचा सोपा मार्ग',
+    'become_donor': 'दाता बना',
+    'ai_prediction': 'AI अंदाज',
+    'live_availability': 'उपलब्धता',
+    'realtime_update': 'माहिती अपडेट',
+    'nearest_donors': 'जवळचे लोक',
+    'distance_matching': 'जवळून जुळणी',
+    'health_risk_check': 'आरोग्य तपासणी',
+    'eligibility_insights': 'पात्रता'
+  },
+  'gu': {
+    'features': 'વિશેષતાઓ',
+    'cloud_based': 'ક્લાઉડ આધારિત',
+    'automated_reports': 'સ્વચાલિત અહેવાલો',
+    'compliance': 'પાલન સરળ બનાવ્યું',
+    'staff_tracking': 'સ્ટાફ પ્રવૃત્તિ ટ્રેકિંગ',
+    'blogs': 'બ્લોગ',
+    'find_blood': 'રક્ત શોધો',
+    'find_donor': 'દાતા શોધો',
+    'blood_banks': 'બ્લડ બેંક',
+    'emergency': 'કટોકટી',
+    'prediction': 'આગાહી',
+    'inventory': 'ઇન્વેન્ટરી',
+    'camps': 'કેમ્પ',
+    'dashboard': 'ડેશબોર્ડ',
+    'profile': 'પ્રોફાઇલ',
+    'logout': 'લોગઆઉટ',
+    'about': 'વિશે',
+    'services': 'સેવાઓ',
+    'awareness': 'જાગૃતિ',
+    'contact': 'સંપર્ક',
+    'sign_in': 'સાઇન ઇન',
+    'sign_up': 'સાઇન અપ',
+    'ai_ml_matching': 'AI • ML • સ્માર્ટ મેચિંગ',
+    'hero_title': 'AI સંચાલિત બ્લડ બેંક મેનેજમેન્ટ સિસ્ટમ',
+    'hero_subtitle': 'AI અને મશીન લર્નિંગનો ઉપયોગ કરીને સ્માર્ટ રક્તદાતા મેચિંગ',
+    'become_donor': 'રક્તદાતા બનો',
+    'ai_prediction': 'AI આગાહી',
+    'live_availability': 'લાઇવ ઉપલબ્ધતા',
+    'realtime_update': 'રીઅલ-ટાઇમ અપડેટ',
+    'nearest_donors': 'નજીકના રક્તદાતાઓ',
+    'distance_matching': 'અંતર-આધારિત મેચિંગ',
+    'health_risk_check': 'આરોગ્ય જોખમ તપાસ',
+    'eligibility_insights': 'પાત્રતા આંતરદૃષ્ટિ'
+  },
+  'ur': {
+    'features': 'خصوصیات',
+    'cloud_based': 'کلاؤڈ بیسڈ',
+    'automated_reports': 'خودکار رپورٹس',
+    'compliance': 'تعمیل آسان بنائی گئی',
+    'staff_tracking': 'اسٹاف سرگرمی ٹریکنگ',
+    'blogs': 'بلاگز',
+    'find_blood': 'خون تلاش کریں',
+    'find_donor': 'عطیہ دہندہ تلاش کریں',
+    'blood_banks': 'بلڈ بینکس',
+    'emergency': 'ہنگامی صورتحال',
+    'prediction': 'پیش گوئی',
+    'inventory': 'انوینٹری',
+    'camps': 'کیمپس',
+    'dashboard': 'ڈیش بورڈ',
+    'profile': 'پروفائل',
+    'logout': 'لاگ آؤٹ',
+    'about': 'کے بارے میں',
+    'services': 'خدمات',
+    'awareness': 'آگاہی',
+    'contact': 'رابطہ',
+    'sign_in': 'سائن ان',
+    'sign_up': 'سائن اپ',
+    'ai_ml_matching': 'AI • ML • اسمارٹ میچنگ',
+    'hero_title': 'AI سے چلنے والا بلڈ بینک مینجمنٹ سسٹم',
+    'hero_subtitle': 'AI اور مشین لرننگ کا استعمال کرتے ہوئے اسمارٹ بلڈ ڈونر میچنگ',
+    'become_donor': 'عطیہ دہندہ بنیں',
+    'ai_prediction': 'AI پیش گوئی',
+    'live_availability': 'لائیو دستیابی',
+    'realtime_update': 'ریئل ٹائم اپڈیٹ',
+    'nearest_donors': 'قریبی عطیہ دہندگان',
+    'distance_matching': 'فاصلے کی بنیاد پر میچنگ',
+    'health_risk_check': 'صحت کے خطرے کی جانچ',
+    'eligibility_insights': 'اہلیت کی بصیرت'
+  },
+  'kok': {
+    'features': 'खाशेलपणां',
+    'cloud_based': 'क्लाउड आदारित',
+    'automated_reports': 'आपोआप अहवाल',
+    'compliance': 'नेम सोपे जाले',
+    'staff_tracking': 'कामगारांचेर देखरेख',
+    'blogs': 'ब्लॉग',
+    'find_blood': 'रगत सोदात',
+    'find_donor': 'रगत दिवपी सोदात',
+    'blood_banks': 'रगतपेढी',
+    'emergency': 'आणीबाणी',
+    'prediction': 'अंदाज',
+    'inventory': 'साठो',
+    'camps': 'शिबीर',
+    'dashboard': 'डॅशबोर्ड',
+    'profile': 'प्रोफाइल',
+    'logout': 'भायर सरचें',
+    'about': 'आमच्या विशीं',
+    'services': 'सेवा',
+    'awareness': 'जागरूकता',
+    'contact': 'संपर्क',
+    'sign_in': 'भितर सरचें',
+    'sign_up': 'नोंदणी करची',
+    'ai_ml_matching': 'AI स्मार्ट जुळवणी',
+    'hero_title': 'AI रगतपेढी व्यवस्थापन',
+    'hero_subtitle': 'रगत दिवपी सोदपाची स्मार्ट पद्दत',
+    'become_donor': 'रगत दिवपी जावचें',
+    'ai_prediction': 'AI अंदाज',
+    'live_availability': 'उपलब्धता',
+    'realtime_update': 'माहिती अपडेट',
+    'nearest_donors': 'लागशिल्ले रगत दिवपी',
+    'distance_matching': 'लागशिल्ली जुळवणी',
+    'health_risk_check': 'आरोग्य तपासणी',
+    'eligibility_insights': 'पात्रता'
+  },
+  'kn': {
+    'features': 'ವೈಶಿಷ್ಟ್ಯಗಳು',
+    'cloud_based': 'ಕ್ಲೌಡ್ ಆಧಾರಿತ',
+    'automated_reports': 'ಸ್ವಯಂಚಾಲಿತ ವರದಿಗಳು',
+    'compliance': 'ಅನುಸರಣೆ ಸುಲಭ',
+    'staff_tracking': 'ಸಿಬ್ಬಂದಿ ಚಟುವಟಿಕೆ ಟ್ರ್ಯಾಕಿಂಗ್',
+    'blogs': 'ಬ್ಲಾಗ್‌ಗಳು',
+    'find_blood': 'ರಕ್ತವನ್ನು ಹುಡುಕಿ',
+    'find_donor': 'ದಾನಿಗಳನ್ನು ಹುಡುಕಿ',
+    'blood_banks': 'ರಕ್ತದ ನಿಧಿಗಳು',
+    'emergency': 'ತುರ್ತು',
+    'prediction': 'ಮುನ್ಸೂಚನೆ',
+    'inventory': 'ದಾಸ್ತಾನು',
+    'camps': 'ಶಿಬಿರಗಳು',
+    'dashboard': 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+    'profile': 'ಪ್ರೊಫೈಲ್',
+    'logout': 'ಲಾಗ್ ಔಟ್',
+    'about': 'ಬಗ್ಗೆ',
+    'services': 'ಸೇವೆಗಳು',
+    'awareness': 'ಜಾಗೃತಿ',
+    'contact': 'ಸಂಪರ್ಕಿಸಿ',
+    'sign_in': 'ಸೈನ್ ಇನ್',
+    'sign_up': 'ಸೈನ್ ಅಪ್',
+    'ai_ml_matching': 'AI • ML • ಸ್ಮಾರ್ಟ್ ಹೊಂದಾಣಿಕೆ',
+    'hero_title': 'AI ಚಾಲಿತ ರಕ್ತದ ನಿಧಿ ನಿರ್ವಹಣಾ ವ್ಯವಸ್ಥೆ',
+    'hero_subtitle': 'AI ಮತ್ತು ಮಷೀನ್ ಲರ್ನಿಂಗ್ ಬಳಸಿ ಸ್ಮಾರ್ಟ್ ರಕ್ತದಾನಿ ಹೊಂದಾಣಿಕೆ',
+    'become_donor': 'ರಕ್ತದಾನಿಯಾಗಿ',
+    'ai_prediction': 'AI ಮುನ್ಸೂಚನೆ',
+    'live_availability': 'ಲೈವ್ ಲಭ್ಯತೆ',
+    'realtime_update': 'ನೈಜ ಸಮಯದ ನವೀಕರಣ',
+    'nearest_donors': 'ಹತ್ತಿರದ ರಕ್ತದಾನಿಗಳು',
+    'distance_matching': 'ದೂರ-ಆಧಾರಿತ ಹೊಂದಾಣಿಕೆ',
+    'health_risk_check': 'ಆರೋಗ್ಯ ಅಪಾಯದ ತಪಾಸಣೆ',
+    'eligibility_insights': 'ಅರ್ಹತೆಯ ಒಳನೋಟಗಳು'
+  },
+  'te': {
+    'features': 'ఫీచర్లు',
+    'cloud_based': 'క్లౌడ్ ఆధారిత',
+    'automated_reports': 'ఆటోమేటెడ్ రిపోర్ట్స్',
+    'compliance': 'నిబంధనల అమలు సులభం',
+    'staff_tracking': 'సిబ్బంది కార్యకలాపాల ట్రాకింగ్',
+    'blogs': 'బ్లాగులు',
+    'find_blood': 'రక్తం కోసం వెతకండి',
+    'find_donor': 'దాతలను వెతకండి',
+    'blood_banks': 'బ్లడ్ బ్యాంకులు',
+    'emergency': 'అత్యవసర పరిస్థితి',
+    'prediction': 'అంచనా',
+    'inventory': 'ఇన్వెంటరీ',
+    'camps': 'శిబిరాలు',
+    'dashboard': 'డ్యాష్‌బోర్డ్',
+    'profile': 'ప్రొఫైల్',
+    'logout': 'లాగ్ అవుట్',
+    'about': 'గురించి',
+    'services': 'సేవలు',
+    'awareness': 'అవగాహన',
+    'contact': 'సంప్రదించండి',
+    'sign_in': 'సైన్ ఇన్',
+    'sign_up': 'సైన్ అప్',
+    'ai_ml_matching': 'AI • ML • స్మార్ట్ మ్యాచింగ్',
+    'hero_title': 'AI ఆధారిత బ్లడ్ బ్యాంక్ మేనేజ్‌మెంట్ సిస్టమ్',
+    'hero_subtitle': 'AI మరియు మెషిన్ లెర్నింగ్ ఉపయోగించి స్మార్ట్ రక్తదాతల మ్యాచింగ్',
+    'become_donor': 'రక్తదాతగా మారండి',
+    'ai_prediction': 'AI అంచనా',
+    'live_availability': 'లైవ్ లభ్యత',
+    'realtime_update': 'రియల్ టైమ్ అప్‌డేట్',
+    'nearest_donors': 'సమీప రక్తదాతలు',
+    'distance_matching': 'దూరం ఆధారిత మ్యాచింగ్',
+    'health_risk_check': 'ఆరోగ్య రిస్క్ తనిఖీ',
+    'eligibility_insights': 'అర్హత అంతర్దృష్టులు'
+  }
+};
+
+function changeLanguage(name, code) {
+  if (!code) return; // Ignore "All Languages" placeholder
+  localStorage.setItem('selectedLanguage', name);
+  localStorage.setItem('selectedLanguageCode', code);
+  
+  document.querySelectorAll('.language-picker').forEach(el => {
+    el.value = code;
+  });
+  
+  applyTranslations(code);
+}
+
+function applyTranslations(code) {
+  const dict = translations[code] || translations['en'];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key]) {
+      // For select options, update textContent
+      el.textContent = dict[key];
+    }
+  });
+}
+
+// Initialize language and Bootstrap dropdowns on load
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore saved language
+  const savedCode = localStorage.getItem('selectedLanguageCode') || 'en';
+  
+  document.querySelectorAll('.language-picker').forEach(el => {
+    el.value = savedCode;
+  });
+  
+  applyTranslations(savedCode);
+
+  // Explicitly initialize all dropdowns to ensure they work
+  var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+  var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+    return new bootstrap.Dropdown(dropdownToggleEl)
+  });
+});
+</script>
+
+<form method="post" style="display:none">
+  {% csrf_token %}
+</form>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
